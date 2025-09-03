@@ -269,29 +269,19 @@ function App() {
     <div className="app">
       <Menubar model={items} className="menubar-fixed" />    
       
-      <main className="container">
-        <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
+      <div className="split-container">
+        <div className="left-panel">
+            <h3>Left Panel</h3>
+          <div className="panel-content">
+          </div>
+        </div>
+        
+        <div className="right-panel">
+          <h3>Right Panel</h3>
+          <div className="panel-content">
+          </div>
+        </div>
       </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
     </div>
   );
 }

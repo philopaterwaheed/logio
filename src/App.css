@@ -56,6 +56,41 @@
   text-align: center;
 }
 
+.split-container {
+  display: flex;
+  height: calc(100vh - 60px);
+  margin-top: 60px;
+}
+
+.left-panel {
+  width: 20%;
+  background-color: #f0f0f0;
+  border-right: 2px solid #ddd;
+  padding: 20px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.right-panel {
+  width: 80%;
+  background-color: #fafafa;
+  padding: 20px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.panel-content {
+  margin-top: 20px;
+}
+
+.left-panel h3,
+.right-panel h3 {
+  margin-top: 0;
+  color: #333;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 10px;
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;
@@ -126,6 +161,23 @@ button {
   .menubar-fixed {
     background-color: #2f2f2f !important;
     border: none !important;
+  }
+
+  .left-panel {
+    background-color: #1e1e1e;
+    border-right: 2px solid #444;
+    color: #f6f6f6;
+  }
+
+  .right-panel {
+    background-color: #252525;
+    color: #f6f6f6;
+  }
+
+  .left-panel h3,
+  .right-panel h3 {
+    color: #f6f6f6;
+    border-bottom: 1px solid #444;
   }
 
   a:hover {
