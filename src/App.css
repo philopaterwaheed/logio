@@ -21,8 +21,34 @@
   -webkit-text-size-adjust: 100%;
 }
 
+.app {
+  position: relative;
+  min-height: 100vh;
+}
+
+.menubar-fixed {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100% !important;
+  z-index: 1000;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.menubar-fixed .p-menubar {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.menubar-fixed .p-menubar-root-list {
+  border: none !important;
+}
+
 .container {
   margin: 0;
+  margin-top: 60px;
   padding-top: 10vh;
   display: flex;
   flex-direction: column;
@@ -35,10 +61,6 @@
   padding: 1.5em;
   will-change: filter;
   transition: 0.75s;
-}
-
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
 }
 
 .row {
@@ -99,6 +121,11 @@ button {
   :root {
     color: #f6f6f6;
     background-color: #2f2f2f;
+  }
+
+  .menubar-fixed {
+    background-color: #2f2f2f !important;
+    border: none !important;
   }
 
   a:hover {
