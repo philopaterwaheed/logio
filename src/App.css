@@ -71,6 +71,14 @@
   box-sizing: border-box;
 }
 
+.left-panel::-webkit-scrollbar {
+  display: none;
+}
+
+.left-panel {
+  scrollbar-width: none;
+}
+
 .right-panel {
   width: 80%;
   background-color: #fafafa;
@@ -79,8 +87,140 @@
   box-sizing: border-box;
 }
 
+.right-panel::-webkit-scrollbar {
+  display: none;
+}
+
+.right-panel {
+  scrollbar-width: none;
+}
+
 .panel-content {
   margin-top: 20px;
+}
+
+.virtual-scroller {
+  border: none !important;
+  outline: none !important;
+}
+
+.virtual-scroller .p-virtualscroller-content {
+  border: none !important;
+  outline: none !important;
+}
+
+/* Hide scrollbars */
+.virtual-scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.virtual-scroller {
+  scrollbar-width: none;
+}
+
+.virtual-scroller .p-virtualscroller-content::-webkit-scrollbar {
+  display: none;
+}
+
+.virtual-scroller .p-virtualscroller-content {
+  scrollbar-width: none;
+}
+
+/* List Item Styles */
+.list-item {
+  padding: 8px 12px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.list-item:hover {
+  background-color: #f5f5f5;
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+/* Left Panel - File List Styles */
+.item-name {
+  font-weight: 500;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.item-details {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: #666;
+}
+
+.item-size {
+  color: #888;
+}
+
+.item-modified {
+  color: #999;
+}
+
+/* Right Panel - Log Entry Styles */
+.log-entry {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
+
+.log-header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+
+.log-timestamp {
+  color: #666;
+  min-width: 80px;
+}
+
+.log-level {
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: bold;
+  font-size: 10px;
+  min-width: 50px;
+  text-align: center;
+}
+
+.level-info {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.level-error {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
+.level-warn {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.level-debug {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.log-source {
+  color: #888;
+  font-style: italic;
+}
+
+.log-message {
+  font-size: 13px;
+  color: #333;
+  line-height: 1.4;
 }
 
 .left-panel h3,
@@ -191,5 +331,62 @@ button {
   }
   button:active {
     background-color: #0f0f0f69;
+  }
+
+  /* Dark mode styles for list items */
+  .list-item {
+    border-bottom: 1px solid #444;
+  }
+
+  .list-item:hover {
+    background-color: #333;
+  }
+
+  .item-name {
+    color: #f6f6f6;
+  }
+
+  .item-details {
+    color: #ccc;
+  }
+
+  .item-size {
+    color: #aaa;
+  }
+
+  .item-modified {
+    color: #999;
+  }
+
+  .log-timestamp {
+    color: #aaa;
+  }
+
+  .log-source {
+    color: #aaa;
+  }
+
+  .log-message {
+    color: #f6f6f6;
+  }
+
+  .level-info {
+    background-color: #1a237e;
+    color: #bbdefb;
+  }
+
+  .level-error {
+    background-color: #b71c1c;
+    color: #ffcdd2;
+  }
+
+  .level-warn {
+    background-color: #e65100;
+    color: #ffcc02;
+  }
+
+  .level-debug {
+    background-color: #4a148c;
+    color: #e1bee7;
   }
 }

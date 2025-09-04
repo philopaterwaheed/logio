@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 import { Menubar } from 'primereact/menubar';
+import { VirtualScroller } from 'primereact/virtualscroller';
 
 
 let items = [
@@ -259,6 +260,56 @@ let items = [
 function App() {
   const [greetMsg, setGreetMsg] = useState("");
   const [name, setName] = useState("");
+  const [leftPanelItems, setLeftPanelItems] = useState([]);
+  const [rightPanelItems, setRightPanelItems] = useState([]);
+
+  // Generate sample data
+  useEffect(() => {
+    // Sample left panel data (e.g., log files)
+    const leftItems = Array.from({ length: 1000 }, (_, i) => ({
+      id: i + 1,
+      name: `log_file_${i + 1}.log`,
+      size: `${Math.floor(Math.random() * 100) + 1} KB`,
+      modified: new Date(Date.now() - Math.random() * 10000000000).toLocaleDateString()
+    }));
+    
+    // Sample right panel data (e.g., log entries)
+    const rightItems = Array.from({ length: 10000 }, (_, i) => ({
+      id: i + 1,
+      timestamp: new Date(Date.now() - Math.random() * 10000000000).toISOString(),
+      level: ['INFO', 'ERROR', 'WARN', 'DEBUG'][Math.floor(Math.random() * 4)],
+      message: `Log message ${i + 1}: This is a sample log entry with some details about what happened in the application.`,
+    }));
+    
+    setLeftPanelItems(leftItems);
+    setRightPanelItems(rightItems);
+  }, []);
+
+  // Item template for left panel
+  const leftItemTemplate = (item) => {
+    return (
+      <div className="list-item">
+        <div className="item-name">{item.name}</div>
+        <div className="item-details">
+          <span className="item-size">{item.size}</span>
+          <span className="item-modified">{item.modified}</span>
+        </div>
+      </div>
+    );
+  };
+
+  // Item template for right panel
+  const rightItemTemplate = (item) => {
+    return (
+      <div className={`list-item log-entry log-${item.level.toLowerCase()}`}>
+        <div className="log-header">
+          <span className="log-timestamp">{new Date(item.timestamp).toLocaleTimeString()}</span>
+          <span className={`log-level level-${item.level.toLowerCase()}`}>{item.level}</span>
+        </div>
+        <div className="log-message">{item.message}</div>
+      </div>
+    );
+  };
 
   async function greet() {
     // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
@@ -271,14 +322,28 @@ function App() {
       
       <div className="split-container">
         <div className="left-panel">
-            <h3>Left Panel</h3>
+          <h3>Log Files</h3>
           <div className="panel-content">
+            <VirtualScroller
+              items={leftPanelItems}
+              itemSize={60}
+              itemTemplate={leftItemTemplate}
+              className="virtual-scroller"
+              style={{ width: '100%', height: 'calc(100vh - 140px)' }}
+            />
           </div>
         </div>
         
         <div className="right-panel">
-          <h3>Right Panel</h3>
+          <h3>Log Entries</h3>
           <div className="panel-content">
+            <VirtualScroller
+              items={rightPanelItems}
+              itemSize={80}
+              itemTemplate={rightItemTemplate}
+              className="virtual-scroller"
+              style={{ width: '100%', height: 'calc(100vh - 140px)' }}
+            />
           </div>
         </div>
       </div>
