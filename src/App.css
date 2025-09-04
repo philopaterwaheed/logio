@@ -23,6 +23,8 @@
 
 .app {
   position: relative;
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
 }
 
@@ -44,16 +46,6 @@
 
 .menubar-fixed .p-menubar-root-list {
   border: none !important;
-}
-
-.container {
-  margin: 0;
-  margin-top: 60px;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
 }
 
 .split-container {
