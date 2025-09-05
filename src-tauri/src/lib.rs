@@ -1,22 +1,26 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+
+mod collector;
+mod config;
+mod app;
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::io::{BufRead, BufReader};
-use std::path::{Path, PathBuf};
+use tauri::{command, State};
+use std::path::PathBuf;
 
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
+use collector::Collector;
+use config::Config;
+use app::App;
+
+
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LogEntry {
-    pub timestamp: DateTime<Utc>,
-    pub source: String,
-    pub level: String,
-    pub message: String,
-    pub file_path: Option<String>,
+    pub timestamp: Option<DateTime<Utc>>,
+    pub level: Option<String>,
+    pub message: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -27,7 +31,6 @@ pub struct LogFilter {
     pub sources: Vec<String>,
     pub search_text: Option<String>,
 }
-
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LogStats {
@@ -40,11 +43,19 @@ pub struct LogStats {
     pub recent_errors: Vec<LogEntry>,
 }
 
+
+#[tauri::command]
+fn get_logs(state: State<App>) -> HashMap<PathBuf, Vec<LogEntry>> {
+    let sources = state.sources.lock().unwrap();
+    sources.clone()
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet])
+        .manage(app::App::default())
+        .invoke_handler(tauri::generate_handler![get_logs])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

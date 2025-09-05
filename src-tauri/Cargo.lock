@@ -1949,11 +1949,13 @@ name = "logio"
 version = "1.0.0"
 dependencies = [
  "chrono",
+ "dirs",
  "serde",
  "serde_json",
  "tauri",
  "tauri-build",
  "tauri-plugin-opener",
+ "tokio",
 ]
 
 [[package]]
