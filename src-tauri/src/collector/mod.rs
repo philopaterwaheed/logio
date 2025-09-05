@@ -3,7 +3,7 @@ use tauri::Result;
 use std::collections::HashMap;
 use std::path::{ PathBuf};
 
-use crate::config::{self, get_config_path, load_config};
+use crate::config::load_config;
 use crate::LogEntry;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -106,7 +106,7 @@ impl Collector {
                                     }
                                 } else {
                                     let mut logs: Vec<LogEntry> = Vec::new();
-                                    let mut empty_log = LogEntry {
+                                    let empty_log = LogEntry {
                                         timestamp: None,
                                         level: Some("warning".to_string()),
                                         message: Some(format!(

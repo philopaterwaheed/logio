@@ -7,11 +7,9 @@ mod app;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use tauri::{command, State};
+use tauri::State;
 use std::path::PathBuf;
 
-use collector::Collector;
-use config::Config;
 use app::App;
 
 
@@ -45,50 +43,46 @@ pub struct LogStats {
 
 
 #[tauri::command]
-async fn get_logs(state: State<'_, App>) -> HashMap<PathBuf, Vec<LogEntry>> {
-    // Start collection to ensure we have fresh data
+async fn get_logs(state: State<'_, App>) -> Result<HashMap<PathBuf, Vec<LogEntry>>, String> {
     state.start_collection().await;
-    
-    // Return the collected logs
-    let sources = state.sources.lock().unwrap();
-    sources.clone()
+    let sources = state.sources.lock().map_err(|e| format!("Failed to lock sources: {}", e))?;
+    Ok(sources.clone())
 }
 
 #[tauri::command]
-async fn add_sample_logs(state: State<'_, App>) -> HashMap<PathBuf, Vec<LogEntry>> {
-    // Add some sample logs for testing
-    let mut sources = state.sources.lock().unwrap();
-    
-    // Sample log entries
+async fn add_sample_logs(state: State<'_, App>) -> Result<HashMap<PathBuf, Vec<LogEntry>>, String> {
+    // Add some sample log entries for testing
     let sample_logs = vec![
         LogEntry {
-            timestamp: Some(chrono::Utc::now()),
+            timestamp: Some(Utc::now()),
             level: Some("INFO".to_string()),
             message: Some("Application started successfully".to_string()),
         },
         LogEntry {
-            timestamp: Some(chrono::Utc::now() - chrono::Duration::minutes(5)),
-            level: Some("WARN".to_string()),
-            message: Some("Memory usage is getting high".to_string()),
-        },
-        LogEntry {
-            timestamp: Some(chrono::Utc::now() - chrono::Duration::minutes(10)),
+            timestamp: Some(Utc::now()),
             level: Some("ERROR".to_string()),
             message: Some("Failed to connect to database".to_string()),
         },
         LogEntry {
-            timestamp: Some(chrono::Utc::now() - chrono::Duration::minutes(15)),
+            timestamp: Some(Utc::now()),
+            level: Some("WARN".to_string()),
+            message: Some("Low disk space warning".to_string()),
+        },
+        LogEntry {
+            timestamp: Some(Utc::now()),
             level: Some("DEBUG".to_string()),
             message: Some("Processing user request".to_string()),
         },
     ];
     
-    // Add sample log files
-    sources.insert(PathBuf::from("/var/log/app.log"), sample_logs.clone());
-    sources.insert(PathBuf::from("/var/log/error.log"), sample_logs[2..3].to_vec());
-    sources.insert(PathBuf::from("/var/log/access.log"), sample_logs.clone());
+    let sample_path = PathBuf::from("sample.log");
+    {
+        let mut sources = state.sources.lock().map_err(|e| format!("Failed to lock sources: {}", e))?;
+        sources.insert(sample_path, sample_logs);
+    }
     
-    sources.clone()
+    let sources = state.sources.lock().map_err(|e| format!("Failed to lock sources: {}", e))?;
+    Ok(sources.clone())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

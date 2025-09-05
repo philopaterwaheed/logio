@@ -10,7 +10,7 @@ function App() {
   const [greetMsg, setGreetMsg] = useState("");
   const [name, setName] = useState("");
   
-  // Use the LogManager hook for real log data
+    // Use the LogManager hook for real log data
   const {
     logEntries,
     logFiles,
@@ -37,6 +37,14 @@ function App() {
                 label: 'Open Directory',
                 icon: 'pi pi-fw pi-folder',
                 command: () => { console.log('Open directory'); }
+            },
+            {
+                separator: true
+            },
+            {
+                label: 'Add Sample Logs',
+                icon: 'pi pi-fw pi-plus',
+                command: () => { addSampleLogs(); }
             },
             {
                 label: 'Add Sample Logs',
