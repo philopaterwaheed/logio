@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 import { Menubar } from 'primereact/menubar';
 import { VirtualScroller } from 'primereact/virtualscroller';
+import LogManager from './components/LogManager';
 
 
 let items = [
@@ -318,37 +319,10 @@ function App() {
 
   return (
     <div>
-    <Menubar model={items} className="menubar-fixed" />    
-	<div className="app">
-	  
-	  <div className="split-container">
-	    <div className="left-panel">
-	      <h3>Log Files</h3>
-	      <div className="panel-content">
-		<VirtualScroller
-		  items={leftPanelItems}
-		  itemSize={60}
-		  itemTemplate={leftItemTemplate}
-		  className="virtual-scroller"
-		  style={{ width: '100%', height: 'calc(100vh - 140px)' }}
-		/>
-	      </div>
-	    </div>
-	    
-	    <div className="right-panel">
-	      <h3>Log Entries</h3>
-	      <div className="panel-content">
-		<VirtualScroller
-		  items={rightPanelItems}
-		  itemSize={80}
-		  itemTemplate={rightItemTemplate}
-		  className="virtual-scroller"
-		  style={{ width: '100%', height: 'calc(100vh - 140px)' }}
-		/>
-	      </div>
-	    </div>
-	  </div>
-	</div>
+      <Menubar model={items} className="menubar-fixed" />    
+      <div className="app">
+        <LogManager />
+      </div>
     </div>
   );
 }
