@@ -3,9 +3,23 @@ import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 import { Menubar } from 'primereact/menubar';
 import { VirtualScroller } from 'primereact/virtualscroller';
+import { useLogManager } from './components/LogManager';
+import { Button } from 'primereact/button';
 
+function App() {
+   // Use the LogManager hook for real log data
+  const {
+    logEntries,
+    logFiles,
+    selectedFile,
+    loading,
+    error,
+    selectLogFile,
+    refreshLogs,
+  } = useLogManager();
 
-let items = [
+  // Generate menu items with access to component functions
+  const items = [
     {
         label: 'File',
         icon: 'pi pi-fw pi-file',
@@ -19,6 +33,9 @@ let items = [
                 label: 'Open Directory',
                 icon: 'pi pi-fw pi-folder',
                 command: () => { console.log('Open directory'); }
+            },
+            {
+                separator: true
             },
             {
                 label: 'Recent Files',
@@ -82,7 +99,7 @@ let items = [
             {
                 label: 'Refresh',
                 icon: 'pi pi-fw pi-refresh',
-                command: () => { console.log('Refresh logs'); }
+                command: () => { refreshLogs(); }
             },
             {
                 label: 'Auto-refresh',
@@ -257,64 +274,39 @@ let items = [
     }
 ];
 
-function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
-  const [leftPanelItems, setLeftPanelItems] = useState([]);
-  const [rightPanelItems, setRightPanelItems] = useState([]);
-
-  // Generate sample data
-  useEffect(() => {
-    // Sample left panel data (e.g., log files)
-    const leftItems = Array.from({ length: 1000 }, (_, i) => ({
-      id: i + 1,
-      name: `log_file_${i + 1}.log`,
-      size: `${Math.floor(Math.random() * 100) + 1} KB`,
-      modified: new Date(Date.now() - Math.random() * 10000000000).toLocaleDateString()
-    }));
-    
-    // Sample right panel data (e.g., log entries)
-    const rightItems = Array.from({ length: 10000 }, (_, i) => ({
-      id: i + 1,
-      timestamp: new Date(Date.now() - Math.random() * 10000000000).toISOString(),
-      level: ['INFO', 'ERROR', 'WARN', 'DEBUG'][Math.floor(Math.random() * 4)],
-      message: `Log message ${i + 1}: This is a sample log entry with some details about what happened in the application.`,
-    }));
-    
-    setLeftPanelItems(leftItems);
-    setRightPanelItems(rightItems);
-  }, []);
-
-  // Item template for left panel
+  // Item template for left panel (log files)
   const leftItemTemplate = (item) => {
+    const isSelected = selectedFile && selectedFile.id === item.id;
     return (
-      <div className="list-item">
+      <div 
+        className={`list-item ${isSelected ? 'selected' : ''}`}
+        onClick={() => selectLogFile(item)}
+      >
         <div className="item-name">{item.name}</div>
         <div className="item-details">
           <span className="item-size">{item.size}</span>
           <span className="item-modified">{item.modified}</span>
+          <span className="item-entries">{item.entryCount} entries</span>
         </div>
       </div>
     );
   };
 
-  // Item template for right panel
+  // Item template for right panel (log entries)
   const rightItemTemplate = (item) => {
     return (
       <div className={`list-item log-entry log-${item.level.toLowerCase()}`}>
         <div className="log-header">
-          <span className="log-timestamp">{new Date(item.timestamp).toLocaleTimeString()}</span>
+          <span className="log-timestamp">
+            {item.timestamp ? new Date(item.timestamp).toLocaleTimeString() : 'N/A'}
+          </span>
           <span className={`log-level level-${item.level.toLowerCase()}`}>{item.level}</span>
+          {item.source && <span className="log-source">{item.source}</span>}
         </div>
         <div className="log-message">{item.message}</div>
       </div>
     );
   };
-
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
 
   return (
     <div>
@@ -323,28 +315,69 @@ function App() {
 	  
 	  <div className="split-container">
 	    <div className="left-panel">
-	      <h3>Log Files</h3>
+	      <div className="panel-header">
+	        <h3>Log Files</h3>
+	        <div className="header-buttons">
+	          <Button 
+	            icon="pi pi-refresh" 
+	            size="small" 
+	            text 
+	            onClick={refreshLogs}
+	            loading={loading}
+	            tooltip="Refresh logs"
+	          />
+	        </div>
+	      </div>
 	      <div className="panel-content">
-		<VirtualScroller
-		  items={leftPanelItems}
-		  itemSize={60}
-		  itemTemplate={leftItemTemplate}
-		  className="virtual-scroller"
-		  style={{ width: '100%', height: 'calc(100vh - 140px)' }}
-		/>
+	        {error && (
+	          <div className="error-message">
+	            <i className="pi pi-exclamation-triangle"></i>
+	            {error}
+	          </div>
+	        )}
+	        {logFiles.length === 0 && !loading ? (
+	          <div className="no-data-message">
+	            <i className="pi pi-info-circle"></i>
+	            No log files found
+	          </div>
+	        ) : (
+	          <VirtualScroller
+	            items={logFiles}
+	            itemSize={70}
+	            itemTemplate={leftItemTemplate}
+	            className="virtual-scroller scrollable"
+	            style={{ width: '100%', height: 'calc(100vh - 140px)' }}
+	          />
+	        )}
 	      </div>
 	    </div>
 	    
 	    <div className="right-panel">
-	      <h3>Log Entries</h3>
+	      <div className="panel-header">
+	        <h3>
+	          Log Entries
+	          {selectedFile && (
+	            <span className="selected-file-info">
+	              - {selectedFile.name} ({logEntries.length} entries)
+	            </span>
+	          )}
+	        </h3>
+	      </div>
 	      <div className="panel-content">
-		<VirtualScroller
-		  items={rightPanelItems}
-		  itemSize={80}
-		  itemTemplate={rightItemTemplate}
-		  className="virtual-scroller"
-		  style={{ width: '100%', height: 'calc(100vh - 140px)' }}
-		/>
+	        {logEntries.length === 0 && !loading ? (
+	          <div className="no-data-message">
+	            <i className="pi pi-info-circle"></i>
+	            {selectedFile ? 'No log entries found in selected file' : 'Select a log file to view entries'}
+	          </div>
+	        ) : (
+	          <VirtualScroller
+	            items={logEntries}
+	            itemSize={80}
+	            itemTemplate={rightItemTemplate}
+	            className="virtual-scroller scrollable"
+	            style={{ width: '100%', height: 'calc(100vh - 140px)' }}
+	          />
+	        )}
 	      </div>
 	    </div>
 	  </div>

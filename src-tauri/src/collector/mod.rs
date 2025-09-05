@@ -1,10 +1,10 @@
 use serde::{Deserialize, Serialize};
 use tauri::Result;
-use std::collections::HashMap;
 use std::path::{ PathBuf};
+use std::fs;
 
-use crate::config::{self, get_config_path, load_config};
-use crate::LogEntry;
+use crate::config::load_config;
+use crate::{LogEntry, LogSource};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Collector {
@@ -66,8 +66,8 @@ impl Collector {
     pub fn list_paths(&self) -> &Vec<PathBuf> {
         &self.paths
     }
-    pub async fn collect_logs(&self) -> Result<HashMap<PathBuf, Vec<LogEntry> >>{
-        let mut sources = HashMap::new();
+    pub async fn collect_logs(&self) -> Result<Vec<(LogSource, Vec<LogEntry>)> >{
+        let mut sources = Vec::new();
         for path in &self.paths {
             if path.is_file() {
                 let mut logs: Vec<LogEntry> = Vec::new();
@@ -81,7 +81,8 @@ impl Collector {
                         };
                         logs.push(log);
                     }
-                    sources.insert(path.clone(), logs);
+                    let metadata = fs::metadata(path)?;
+                    sources.push((LogSource{path:path.clone() , size:metadata.len()}, logs));
                 }
             } else if path.is_dir() {
                 if let Ok(mut entries) = tokio::fs::read_dir(path).await {
@@ -102,11 +103,13 @@ impl Collector {
                                             };
                                             logs.push(log);
                                         }
-                                        sources.insert(path.clone(), logs);
+                                        let metadata = fs::metadata(&file_path)?;
+                                        sources.push((LogSource{path:file_path.clone() , size:metadata.len()}, logs));
                                     }
                                 } else {
+                                    // this will change in future when being lazy
                                     let mut logs: Vec<LogEntry> = Vec::new();
-                                    let mut empty_log = LogEntry {
+                                    let empty_log = LogEntry {
                                         timestamp: None,
                                         level: Some("warning".to_string()),
                                         message: Some(format!(
@@ -115,7 +118,8 @@ impl Collector {
                                         )),
                                     };
                                     logs.push(empty_log);
-                                    sources.insert(path.clone(), logs);
+                                    let metadata = fs::metadata(&file_path)?;
+                                    sources.push((LogSource{path:file_path.clone() , size:metadata.len()}, logs));
                                 }
                             }
                         }

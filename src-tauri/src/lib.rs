@@ -6,12 +6,10 @@ mod app;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use tauri::{command, State};
+use tauri::State;
 use std::path::PathBuf;
+use std::collections::HashMap;
 
-use collector::Collector;
-use config::Config;
 use app::App;
 
 
@@ -21,6 +19,12 @@ pub struct LogEntry {
     pub timestamp: Option<DateTime<Utc>>,
     pub level: Option<String>,
     pub message: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct LogSource {
+    pub path: PathBuf,
+    pub size: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -45,10 +49,12 @@ pub struct LogStats {
 
 
 #[tauri::command]
-fn get_logs(state: State<App>) -> HashMap<PathBuf, Vec<LogEntry>> {
-    let sources = state.sources.lock().unwrap();
-    sources.clone()
+async fn get_logs(state: State<'_, App>) -> Result<Vec<(LogSource, Vec<LogEntry>)>, String> {
+    state.start_collection().await;
+    let sources = state.sources.lock().map_err(|e| format!("Failed to lock sources: {}", e))?;
+    Ok(sources.clone())
 }
+
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
