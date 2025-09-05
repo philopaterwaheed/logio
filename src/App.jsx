@@ -3,8 +3,14 @@ import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 import { Menubar } from 'primereact/menubar';
 import { VirtualScroller } from 'primereact/virtualscroller';
-import LogManager from './components/LogManager';
-
+import useTauri from "./hooks/useTauri";
+  const {
+    logs,
+    stats,
+    loading,
+    error,
+    getLogs,
+  } = useTauri();
 
 let items = [
     {
@@ -259,8 +265,6 @@ let items = [
 ];
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
   const [leftPanelItems, setLeftPanelItems] = useState([]);
   const [rightPanelItems, setRightPanelItems] = useState([]);
 
@@ -284,6 +288,7 @@ function App() {
     
     setLeftPanelItems(leftItems);
     setRightPanelItems(rightItems);
+    // getLogs();
   }, []);
 
   // Item template for left panel
@@ -314,15 +319,42 @@ function App() {
 
   async function greet() {
     // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
+    // setGreetMsg(await invoke("greet", { name }));
   }
 
   return (
     <div>
-      <Menubar model={items} className="menubar-fixed" />    
-      <div className="app">
-        <LogManager />
-      </div>
+    <Menubar model={items} className="menubar-fixed" />    
+	<div className="app">
+	  
+	  <div className="split-container">
+	    <div className="left-panel">
+	      <h3>Log Files</h3>
+	      <div className="panel-content">
+		<VirtualScroller
+		  items={leftPanelItems}
+		  itemSize={60}
+		  itemTemplate={leftItemTemplate}
+		  className="virtual-scroller"
+		  style={{ width: '100%', height: 'calc(100vh - 140px)' }}
+		/>
+	      </div>
+	    </div>
+	    
+	    <div className="right-panel">
+	      <h3>Log Entries</h3>
+	      <div className="panel-content">
+		<VirtualScroller
+		  items={rightPanelItems}
+		  itemSize={80}
+		  itemTemplate={rightItemTemplate}
+		  className="virtual-scroller"
+		  style={{ width: '100%', height: 'calc(100vh - 140px)' }}
+		/>
+	      </div>
+	    </div>
+	  </div>
+	</div>
     </div>
   );
 }
