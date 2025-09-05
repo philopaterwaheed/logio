@@ -1,18 +1,20 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 
-mod app;
 mod collector;
 mod config;
+mod app;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use tauri::{command, State};
 use std::path::PathBuf;
-use tauri::{command, Manager, State};
 
-use app::App;
 use collector::Collector;
 use config::Config;
+use app::App;
+
+
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LogEntry {
@@ -41,20 +43,52 @@ pub struct LogStats {
     pub recent_errors: Vec<LogEntry>,
 }
 
-#[tauri::command]
-async fn get_logs(state: State<'_, App>) -> Result<HashMap<String, Vec<LogEntry>>, String> {
-    // Convert PathBuf keys to String for JSON serialization
-    let sources = state
-        .sources
-        .lock()
-        .map_err(|e| format!("Failed to lock sources: {}", e))?;
-    let mut result = HashMap::new();
-    for (path, logs) in sources.iter() {
-        result.insert(path.to_string_lossy().to_string(), logs.clone());
-    }
-    println!("get_logs: Retrieved logs from {} sources", result.len());
 
-    Ok(result)
+#[tauri::command]
+async fn get_logs(state: State<'_, App>) -> HashMap<PathBuf, Vec<LogEntry>> {
+    // Start collection to ensure we have fresh data
+    state.start_collection().await;
+    
+    // Return the collected logs
+    let sources = state.sources.lock().unwrap();
+    sources.clone()
+}
+
+#[tauri::command]
+async fn add_sample_logs(state: State<'_, App>) -> HashMap<PathBuf, Vec<LogEntry>> {
+    // Add some sample logs for testing
+    let mut sources = state.sources.lock().unwrap();
+    
+    // Sample log entries
+    let sample_logs = vec![
+        LogEntry {
+            timestamp: Some(chrono::Utc::now()),
+            level: Some("INFO".to_string()),
+            message: Some("Application started successfully".to_string()),
+        },
+        LogEntry {
+            timestamp: Some(chrono::Utc::now() - chrono::Duration::minutes(5)),
+            level: Some("WARN".to_string()),
+            message: Some("Memory usage is getting high".to_string()),
+        },
+        LogEntry {
+            timestamp: Some(chrono::Utc::now() - chrono::Duration::minutes(10)),
+            level: Some("ERROR".to_string()),
+            message: Some("Failed to connect to database".to_string()),
+        },
+        LogEntry {
+            timestamp: Some(chrono::Utc::now() - chrono::Duration::minutes(15)),
+            level: Some("DEBUG".to_string()),
+            message: Some("Processing user request".to_string()),
+        },
+    ];
+    
+    // Add sample log files
+    sources.insert(PathBuf::from("/var/log/app.log"), sample_logs.clone());
+    sources.insert(PathBuf::from("/var/log/error.log"), sample_logs[2..3].to_vec());
+    sources.insert(PathBuf::from("/var/log/access.log"), sample_logs.clone());
+    
+    sources.clone()
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -62,7 +96,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .manage(app::App::default())
-        .invoke_handler(tauri::generate_handler![get_logs,])
+        .invoke_handler(tauri::generate_handler![get_logs, add_sample_logs])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

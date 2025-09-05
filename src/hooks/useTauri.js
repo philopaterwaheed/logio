@@ -2,31 +2,36 @@ import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 
 export const useTauri = () => {
-  const [logs, setLogs] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
 
-  // Get all logs
-  const getLogs = async () => {
+  useEffect(() => {
+    // Test connection by trying to invoke a simple command
+    const testConnection = async () => {
+      try {
+        await invoke('get_logs');
+        setIsConnected(true);
+      } catch (error) {
+        console.warn('Tauri connection test failed:', error);
+        setIsConnected(false);
+      }
+    };
+
+    testConnection();
+  }, []);
+
+  const invokeCommand = async (command, args = {}) => {
     try {
-      setLoading(true);
-      setError(null);
-      const result = await invoke('get_logs');
-      setLogs(result);
-      return result;
-    } catch (err) {
-      setError(err.message);
-      console.error('Failed to get logs:', err);
-    } finally {
-      setLoading(false);
+      const result = await invoke(command, args);
+      return { success: true, data: result };
+    } catch (error) {
+      console.error(`Tauri command '${command}' failed:`, error);
+      return { success: false, error: error.message };
     }
   };
 
-   return {
-    logs,
-    loading,
-    error,
-    getLogs
+  return {
+    isConnected,
+    invoke: invokeCommand
   };
 };
 

@@ -96,26 +96,39 @@
   outline: none !important;
 }
 
+.virtual-scroller.scrollable {
+  overflow-y: auto !important;
+}
+
 .virtual-scroller .p-virtualscroller-content {
   border: none !important;
   outline: none !important;
+  overflow-y: visible !important;
 }
 
-/* Hide scrollbars */
-.virtual-scroller::-webkit-scrollbar {
-  display: none;
+/* Enable scrollbars for better UX */
+.virtual-scroller.scrollable::-webkit-scrollbar {
+  width: 8px;
 }
 
-.virtual-scroller {
-  scrollbar-width: none;
+.virtual-scroller.scrollable::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
 }
 
-.virtual-scroller .p-virtualscroller-content::-webkit-scrollbar {
-  display: none;
+.virtual-scroller.scrollable::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
 }
 
-.virtual-scroller .p-virtualscroller-content {
-  scrollbar-width: none;
+.virtual-scroller.scrollable::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* For Firefox */
+.virtual-scroller.scrollable {
+  scrollbar-width: thin;
+  scrollbar-color: #c1c1c1 #f1f1f1;
 }
 
 /* List Item Styles */
@@ -130,8 +143,55 @@
   background-color: #f5f5f5;
 }
 
+.list-item.selected {
+  background-color: #e3f2fd;
+  border-left: 3px solid #1976d2;
+}
+
 .list-item:last-child {
   border-bottom: none;
+}
+
+/* Panel Header Styles */
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.panel-header h3 {
+  margin: 0;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.selected-file-info {
+  font-size: 14px;
+  font-weight: normal;
+  color: #666;
+}
+
+/* Message Styles */
+.error-message,
+.no-data-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+}
+
+.error-message {
+  color: #d32f2f;
+  background-color: #ffebee;
+  border: 1px solid #ffcdd2;
+  border-radius: 4px;
 }
 
 /* Left Panel - File List Styles */
@@ -144,9 +204,10 @@
 
 .item-details {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   font-size: 12px;
   color: #666;
+  flex-wrap: wrap;
 }
 
 .item-size {
@@ -155,6 +216,11 @@
 
 .item-modified {
   color: #999;
+}
+
+.item-entries {
+  color: #1976d2;
+  font-weight: 500;
 }
 
 /* Right Panel - Log Entry Styles */
@@ -334,6 +400,11 @@ button {
     background-color: #333;
   }
 
+  .list-item.selected {
+    background-color: #1a237e;
+    border-left: 3px solid #bbdefb;
+  }
+
   .item-name {
     color: #f6f6f6;
   }
@@ -348,6 +419,41 @@ button {
 
   .item-modified {
     color: #999;
+  }
+
+  .item-entries {
+    color: #bbdefb;
+  }
+
+  .selected-file-info {
+    color: #ccc;
+  }
+
+  .error-message {
+    color: #ffcdd2;
+    background-color: #b71c1c;
+    border-color: #d32f2f;
+  }
+
+  .no-data-message {
+    color: #ccc;
+  }
+
+  /* Dark scrollbars */
+  .virtual-scroller.scrollable::-webkit-scrollbar-track {
+    background: #2f2f2f;
+  }
+
+  .virtual-scroller.scrollable::-webkit-scrollbar-thumb {
+    background: #555;
+  }
+
+  .virtual-scroller.scrollable::-webkit-scrollbar-thumb:hover {
+    background: #777;
+  }
+
+  .virtual-scroller.scrollable {
+    scrollbar-color: #555 #2f2f2f;
   }
 
   .log-timestamp {
