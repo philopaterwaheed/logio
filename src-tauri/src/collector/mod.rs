@@ -2,9 +2,10 @@ use serde::{Deserialize, Serialize};
 use tauri::Result;
 use std::collections::HashMap;
 use std::path::{ PathBuf};
+use std::fs;
 
 use crate::config::load_config;
-use crate::LogEntry;
+use crate::{LogEntry, LogSource};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Collector {
@@ -66,7 +67,7 @@ impl Collector {
     pub fn list_paths(&self) -> &Vec<PathBuf> {
         &self.paths
     }
-    pub async fn collect_logs(&self) -> Result<HashMap<PathBuf, Vec<LogEntry> >>{
+    pub async fn collect_logs(&self) -> Result<HashMap<LogSource, Vec<LogEntry> >>{
         let mut sources = HashMap::new();
         for path in &self.paths {
             if path.is_file() {
@@ -81,7 +82,8 @@ impl Collector {
                         };
                         logs.push(log);
                     }
-                    sources.insert(path.clone(), logs);
+                    let metadata = fs::metadata(path)?;
+                    sources.insert(LogSource{path:path.clone() , size:metadata.len()}, logs);
                 }
             } else if path.is_dir() {
                 if let Ok(mut entries) = tokio::fs::read_dir(path).await {
@@ -102,9 +104,11 @@ impl Collector {
                                             };
                                             logs.push(log);
                                         }
-                                        sources.insert(file_path.clone(), logs);
+                                        let metadata = fs::metadata(&file_path)?;
+                                        sources.insert(LogSource{path:file_path.clone() , size:metadata.len()}, logs);
                                     }
                                 } else {
+                                    // this will change in future when being lazy
                                     let mut logs: Vec<LogEntry> = Vec::new();
                                     let empty_log = LogEntry {
                                         timestamp: None,
@@ -115,7 +119,8 @@ impl Collector {
                                         )),
                                     };
                                     logs.push(empty_log);
-                                    sources.insert(file_path.clone(), logs);
+                                    let metadata = fs::metadata(&file_path)?;
+                                    sources.insert(LogSource{path:file_path.clone() , size:metadata.len()}, logs);
                                 }
                             }
                         }

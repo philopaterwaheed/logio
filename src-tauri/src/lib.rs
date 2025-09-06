@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tauri::State;
 use std::path::PathBuf;
+use std::hash::{Hash, Hasher};
 
 use app::App;
 
@@ -19,6 +20,25 @@ pub struct LogEntry {
     pub timestamp: Option<DateTime<Utc>>,
     pub level: Option<String>,
     pub message: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct LogSource {
+    pub path: PathBuf,
+    pub size: u64,
+}
+impl PartialEq for LogSource {
+    fn eq(&self, other: &Self) -> bool {
+        self.path == other.path && self.size == other.size
+    }
+}
+impl Eq for LogSource {}
+
+impl Hash for LogSource {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.path.to_string_lossy().hash(state);
+        self.size.hash(state);
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -43,7 +63,7 @@ pub struct LogStats {
 
 
 #[tauri::command]
-async fn get_logs(state: State<'_, App>) -> Result<HashMap<PathBuf, Vec<LogEntry>>, String> {
+async fn get_logs(state: State<'_, App>) -> Result<HashMap<LogSource, Vec<LogEntry>>, String> {
     state.start_collection().await;
     let sources = state.sources.lock().map_err(|e| format!("Failed to lock sources: {}", e))?;
     println!("Retrieved logs: {:?}", sources);

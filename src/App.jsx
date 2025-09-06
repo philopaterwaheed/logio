@@ -7,10 +7,7 @@ import { useLogManager } from './components/LogManager';
 import { Button } from 'primereact/button';
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
-  
-    // Use the LogManager hook for real log data
+   // Use the LogManager hook for real log data
   const {
     logEntries,
     logFiles,

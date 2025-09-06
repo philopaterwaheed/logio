@@ -4,10 +4,11 @@ use std::sync::Mutex;
 
 use crate::collector::Collector;
 use crate::LogEntry;
+use crate::LogSource;
 
 #[derive(Debug)]
 pub struct App {
-    pub  sources:  Mutex<HashMap<PathBuf, Vec<LogEntry>>>, // source -> log lines
+    pub  sources:  Mutex<HashMap<LogSource, Vec<LogEntry>>>, // source -> log lines
     collector: Collector,
 }
 
@@ -27,7 +28,7 @@ impl App {
             return;
         }
     }
-    pub fn get_logs(&self) -> HashMap<PathBuf, Vec<LogEntry>> {
+    pub fn get_logs(&self) -> HashMap<LogSource, Vec<LogEntry>> {
         let sources = self.sources.lock().unwrap();
         sources.clone()
     }

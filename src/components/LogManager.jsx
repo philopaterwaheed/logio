@@ -9,34 +9,29 @@ export const useLogManager = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Fetch logs from Tauri backend
   const fetchLogs = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Try to call the get_logs command from Tauri
       let result;
       try {
         result = await invoke('get_logs');
       } catch (err) {
-        // If no real logs found, try to add sample logs for testing
         console.warn('No real logs found, adding sample logs:', err);
-        result = await invoke('add_sample_logs');
       }
       
       setLogs(result);
       
-      // Convert the logs object to arrays for display
-      const files = Object.keys(result).map(filePath => ({
-        id: filePath,
-        name: filePath.split('/').pop() || filePath,
-        path: filePath,
-        size: `${Math.floor(result[filePath].length / 10)} KB`, // Rough estimate
+      // convert the logs object to arrays for display
+      const files = Object.keys(result).map(logSource => ({
+        id: logSource.filePath,
+        name: logSource.filePath.split('/').pop() || filePath,
+        path: logSource.filePath,
+        size: logSource.size || `${Math.floor(result[filePath].length / 10)} KB`,
         modified: new Date().toLocaleDateString(),
         entryCount: result[filePath].length
       }));
-      
       setLogFiles(files);
       
       // If no file is selected and we have files, select the first one
