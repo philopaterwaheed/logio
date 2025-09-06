@@ -46,42 +46,7 @@ pub struct LogStats {
 async fn get_logs(state: State<'_, App>) -> Result<HashMap<PathBuf, Vec<LogEntry>>, String> {
     state.start_collection().await;
     let sources = state.sources.lock().map_err(|e| format!("Failed to lock sources: {}", e))?;
-    Ok(sources.clone())
-}
-
-#[tauri::command]
-async fn add_sample_logs(state: State<'_, App>) -> Result<HashMap<PathBuf, Vec<LogEntry>>, String> {
-    // Add some sample log entries for testing
-    let sample_logs = vec![
-        LogEntry {
-            timestamp: Some(Utc::now()),
-            level: Some("INFO".to_string()),
-            message: Some("Application started successfully".to_string()),
-        },
-        LogEntry {
-            timestamp: Some(Utc::now()),
-            level: Some("ERROR".to_string()),
-            message: Some("Failed to connect to database".to_string()),
-        },
-        LogEntry {
-            timestamp: Some(Utc::now()),
-            level: Some("WARN".to_string()),
-            message: Some("Low disk space warning".to_string()),
-        },
-        LogEntry {
-            timestamp: Some(Utc::now()),
-            level: Some("DEBUG".to_string()),
-            message: Some("Processing user request".to_string()),
-        },
-    ];
-    
-    let sample_path = PathBuf::from("sample.log");
-    {
-        let mut sources = state.sources.lock().map_err(|e| format!("Failed to lock sources: {}", e))?;
-        sources.insert(sample_path, sample_logs);
-    }
-    
-    let sources = state.sources.lock().map_err(|e| format!("Failed to lock sources: {}", e))?;
+    println!("Retrieved logs: {:?}", sources);
     Ok(sources.clone())
 }
 
@@ -90,7 +55,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .manage(app::App::default())
-        .invoke_handler(tauri::generate_handler![get_logs, add_sample_logs])
+        .invoke_handler(tauri::generate_handler![get_logs])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -102,7 +102,7 @@ impl Collector {
                                             };
                                             logs.push(log);
                                         }
-                                        sources.insert(path.clone(), logs);
+                                        sources.insert(file_path.clone(), logs);
                                     }
                                 } else {
                                     let mut logs: Vec<LogEntry> = Vec::new();
@@ -115,7 +115,7 @@ impl Collector {
                                         )),
                                     };
                                     logs.push(empty_log);
-                                    sources.insert(path.clone(), logs);
+                                    sources.insert(file_path.clone(), logs);
                                 }
                             }
                         }
@@ -123,6 +123,7 @@ impl Collector {
                 }
             }
         }
+        println!("Collected logs from sources: {:?}", sources.keys());
         Ok(sources)
     }
 }

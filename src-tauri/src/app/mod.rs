@@ -21,10 +21,9 @@ impl Default for App {
 }
 impl App {
     pub async fn start_collection(&self) {
-        if let Ok(sources_vec) = self.collector.collect_logs().await {
+        if let Ok(sources_map) = self.collector.collect_logs().await {
             let mut sources = self.sources.lock().unwrap();
-            *sources = sources_vec;
-            
+            *sources = sources_map;
             return;
         }
     }
