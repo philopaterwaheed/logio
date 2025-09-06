@@ -3,49 +3,11 @@
 mod collector;
 mod config;
 mod app;
+mod types;
 
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
 use tauri::State;
-use std::path::PathBuf;
-use std::collections::HashMap;
-
+use types::{LogEntry, LogSource};
 use app::App;
-
-
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct LogEntry {
-    pub timestamp: Option<DateTime<Utc>>,
-    pub level: Option<String>,
-    pub message: Option<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct LogSource {
-    pub path: PathBuf,
-    pub size: u64,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct LogFilter {
-    pub start_time: Option<DateTime<Utc>>,
-    pub end_time: Option<DateTime<Utc>>,
-    pub levels: Vec<String>,
-    pub sources: Vec<String>,
-    pub search_text: Option<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct LogStats {
-    pub total_logs: usize,
-    pub error_count: usize,
-    pub warning_count: usize,
-    pub info_count: usize,
-    pub debug_count: usize,
-    pub sources: HashMap<String, usize>,
-    pub recent_errors: Vec<LogEntry>,
-}
 
 
 #[tauri::command]
@@ -55,13 +17,19 @@ async fn get_logs(state: State<'_, App>) -> Result<Vec<(LogSource, Vec<LogEntry>
     Ok(sources.clone())
 }
 
+#[tauri::command]
+async fn refresh_source(state: State<'_, App>, path: String) -> Result<(), String> {
+    let path_buf = std::path::PathBuf::from(path);
+    state.update_source_entries(&path_buf);
+    Ok(())
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .manage(app::App::default())
-        .invoke_handler(tauri::generate_handler![get_logs])
+        .invoke_handler(tauri::generate_handler![get_logs , refresh_source])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

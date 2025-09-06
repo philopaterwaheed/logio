@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 use tauri::Result;
 use std::path::{ PathBuf};
 use std::fs;
+use std::collections::HashMap;
+use std::io::Error;
 
 use crate::config::load_config;
 use crate::{LogEntry, LogSource};
@@ -66,8 +68,9 @@ impl Collector {
     pub fn list_paths(&self) -> &Vec<PathBuf> {
         &self.paths
     }
-    pub async fn collect_logs(&self) -> Result<Vec<(LogSource, Vec<LogEntry>)> >{
+    pub async fn collect_all_logs(&self) -> Result<(Vec<(LogSource, Vec<LogEntry>)> , HashMap<PathBuf, usize> )>{
         let mut sources = Vec::new();
+        let mut source_indexes: HashMap<PathBuf, usize> = HashMap::new();
         for path in &self.paths {
             if path.is_file() {
                 let mut logs: Vec<LogEntry> = Vec::new();
@@ -83,6 +86,10 @@ impl Collector {
                     }
                     let metadata = fs::metadata(path)?;
                     sources.push((LogSource{path:path.clone() , size:metadata.len()}, logs));
+                    sources.len().checked_sub(1).and_then(|idx| {
+                        source_indexes.insert(path.clone(), idx);
+                        Some(())
+                    });
                 }
             } else if path.is_dir() {
                 if let Ok(mut entries) = tokio::fs::read_dir(path).await {
@@ -105,6 +112,10 @@ impl Collector {
                                         }
                                         let metadata = fs::metadata(&file_path)?;
                                         sources.push((LogSource{path:file_path.clone() , size:metadata.len()}, logs));
+                                        sources.len().checked_sub(1).and_then(|idx| {
+                                            source_indexes.insert(file_path.clone(), idx);
+                                            Some(())
+                                        });
                                     }
                                 } else {
                                     // this will change in future when being lazy
@@ -120,6 +131,10 @@ impl Collector {
                                     logs.push(empty_log);
                                     let metadata = fs::metadata(&file_path)?;
                                     sources.push((LogSource{path:file_path.clone() , size:metadata.len()}, logs));
+                                    sources.len().checked_sub(1).and_then(|idx| {
+                                        source_indexes.insert(file_path.clone(), idx);
+                                        Some(())
+                                    });
                                 }
                             }
                         }
@@ -127,6 +142,30 @@ impl Collector {
                 }
             }
         }
-        Ok(sources)
+        Ok((sources , source_indexes))
+    }
+    
+    pub fn collect_logs_for_path(&self, path: &PathBuf) -> Result<(LogSource, Vec<LogEntry>)> {
+        let mut logs: Vec<LogEntry> = Vec::new();
+        if path.is_file() {
+            if let Ok(content) = fs::read_to_string(path) {
+                for line in content.lines() {
+                    // todo : parse line
+                    let log = LogEntry {
+                        timestamp: None,
+                        level: None,
+                        message: Some(line.to_string()),
+                    };
+                    logs.push(log);
+                }
+                let metadata = fs::metadata(path)?;
+                return Ok((LogSource{path:path.clone() , size:metadata.len()}, logs));
+            }
+        }
+        else if path.is_dir() {
+            todo!()
+            // I don't think we need it because this function will be called to update one file
+        }
+        Err(tauri::Error::UnknownPath) // I don't know if this is the best
     }
 }
