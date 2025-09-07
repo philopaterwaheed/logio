@@ -7,7 +7,7 @@ import { useLogManager } from './components/LogManager';
 import { Button } from 'primereact/button';
 
 function App() {
-   // Use the LogManager hook for real log data
+  // Use the LogManager hook for real log data
   const {
     logEntries,
     logFiles,
@@ -16,6 +16,10 @@ function App() {
     error,
     selectLogFile,
     refreshLogs,
+    autoRefreshEnabled,
+    autoRefreshInterval,
+    toggleAutoRefresh,
+    updateAutoRefreshInterval,
   } = useLogManager();
 
   // Generate menu items with access to component functions
@@ -103,8 +107,43 @@ function App() {
             },
             {
                 label: 'Auto-refresh',
-                icon: 'pi pi-fw pi-sync',
-                command: () => { console.log('Toggle auto-refresh'); }
+                icon: autoRefreshEnabled ? 'pi pi-fw pi-pause' : 'pi pi-fw pi-sync',
+                command: () => { toggleAutoRefresh(); },
+                items: [
+                    {
+                        label: autoRefreshEnabled ? 'Disable Auto-refresh' : 'Enable Auto-refresh',
+                        icon: autoRefreshEnabled ? 'pi pi-fw pi-pause' : 'pi pi-fw pi-play',
+                        command: () => { toggleAutoRefresh(); }
+                    },
+                    {
+                        separator: true
+                    },
+                    {
+                        label: 'Refresh Every 1s',
+                        icon: autoRefreshInterval === 1000 ? 'pi pi-fw pi-check' : 'pi pi-fw pi-circle',
+                        command: () => { updateAutoRefreshInterval(1000); }
+                    },
+                    {
+                        label: 'Refresh Every 5s',
+                        icon: autoRefreshInterval === 5000 ? 'pi pi-fw pi-check' : 'pi pi-fw pi-circle',
+                        command: () => { updateAutoRefreshInterval(5000); }
+                    },
+                    {
+                        label: 'Refresh Every 10s',
+                        icon: autoRefreshInterval === 10000 ? 'pi pi-fw pi-check' : 'pi pi-fw pi-circle',
+                        command: () => { updateAutoRefreshInterval(10000); }
+                    },
+                    {
+                        label: 'Refresh Every 30s',
+                        icon: autoRefreshInterval === 30000 ? 'pi pi-fw pi-check' : 'pi pi-fw pi-circle',
+                        command: () => { updateAutoRefreshInterval(30000); }
+                    },
+                    {
+                        label: 'Refresh Every 60s',
+                        icon: autoRefreshInterval === 60000 ? 'pi pi-fw pi-check' : 'pi pi-fw pi-circle',
+                        command: () => { updateAutoRefreshInterval(60000); }
+                    }
+                ]
             },
             {
                 separator: true
@@ -325,6 +364,17 @@ function App() {
 	            loading={loading}
 	            tooltip="Refresh logs"
 	          />
+	          {autoRefreshEnabled && (
+	            <Button 
+	              icon="pi pi-sync" 
+	              size="small" 
+	              text 
+	              className="auto-refresh-indicator"
+	              onClick={toggleAutoRefresh}
+	              tooltip={`Auto-refresh enabled (${autoRefreshInterval / 1000}s)`}
+	              style={{ color: '#10b981', animation: 'spin 2s linear infinite' , background_color: 'transparent' }}
+	            />
+	          )}
 	        </div>
 	      </div>
 	      <div className="panel-content">
@@ -358,6 +408,12 @@ function App() {
 	          {selectedFile && (
 	            <span className="selected-file-info">
 	              - {selectedFile.name} ({logEntries.length} entries)
+	            </span>
+	          )}
+	          {autoRefreshEnabled && (
+	            <span className="auto-refresh-status">
+	              <i className="pi pi-sync" style={{ color: '#10b981', animation: 'spin 2s linear infinite', marginLeft: '10px' }}></i>
+	              Auto-refresh ({autoRefreshInterval / 1000}s)
 	            </span>
 	          )}
 	        </h3>

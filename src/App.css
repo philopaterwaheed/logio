@@ -488,3 +488,38 @@ button {
     color: #e1bee7;
   }
 }
+
+/* Auto-refresh animation */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.auto-refresh-indicator {
+  color: #10b981 !important;
+  background-color: transparent !important;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  animation: spin 2s linear infinite;
+}
+
+.auto-refresh-indicator:hover {
+  background-color: transparent !important;
+  background: none !important;
+  border: none !important;
+}
+
+.auto-refresh-status {
+  font-size: 0.9em;
+  color: #10b981;
+  font-weight: normal;
+}
+
+.auto-refresh-status i {
+  margin-right: 5px;
+}

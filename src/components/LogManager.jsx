@@ -8,6 +8,11 @@ export const useLogManager = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Auto-refresh state
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(false);
+  const [autoRefreshInterval, setAutoRefreshInterval] = useState(5000); // 5 seconds default
+  const [intervalId, setIntervalId] = useState(null);
 
 const fetchLogs = useCallback(async () => {
   try {
@@ -169,6 +174,49 @@ useEffect(() => {
     fetchLogs();
   }, [fetchLogs]);
 
+  // Auto-refresh functions
+  const toggleAutoRefresh = useCallback(() => {
+    setAutoRefreshEnabled(prev => !prev);
+  }, []);
+
+  const updateAutoRefreshInterval = useCallback((newInterval) => {
+    setAutoRefreshInterval(newInterval);
+  }, []);
+
+  // Auto-refresh effect
+  useEffect(() => {
+    if (autoRefreshEnabled && autoRefreshInterval > 0) {
+      const id = setInterval(() => {
+        if (selectedFile) {
+          refreshLogSource(selectedFile.path);
+        } else {
+          refreshLogs();
+        }
+      }, autoRefreshInterval);
+      
+      setIntervalId(id);
+      
+      return () => {
+        clearInterval(id);
+        setIntervalId(null);
+      };
+    } else {
+      if (intervalId) {
+        clearInterval(intervalId);
+        setIntervalId(null);
+      }
+    }
+  }, [autoRefreshEnabled, autoRefreshInterval, selectedFile, refreshLogSource, refreshLogs]);
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [intervalId]);
+
 
   // Initial load
   useEffect(() => {
@@ -185,6 +233,11 @@ useEffect(() => {
     selectLogFile,
     refreshLogs,
     refreshLogSource,
+    // Auto-refresh controls
+    autoRefreshEnabled,
+    autoRefreshInterval,
+    toggleAutoRefresh,
+    updateAutoRefreshInterval,
   };
 };
 
