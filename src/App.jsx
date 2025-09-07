@@ -301,7 +301,6 @@ function App() {
             {item.timestamp ? new Date(item.timestamp).toLocaleTimeString() : 'N/A'}
           </span>
           <span className={`log-level level-${item.level.toLowerCase()}`}>{item.level}</span>
-          {item.source && <span className="log-source">{item.source}</span>}
         </div>
         <div className="log-message">{item.message}</div>
       </div>

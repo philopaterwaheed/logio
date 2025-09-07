@@ -18,10 +18,9 @@ async fn get_logs(state: State<'_, App>) -> Result<Vec<(LogSource, Vec<LogEntry>
 }
 
 #[tauri::command]
-async fn refresh_source(state: State<'_, App>, path: String) -> Result<(), String> {
+async fn refresh_source(state: State<'_, App>, path: String) -> Result<(LogSource, Vec<LogEntry>), String> {
     let path_buf = std::path::PathBuf::from(path);
-    state.update_source_entries(&path_buf);
-    Ok(())
+    state.update_source_entries(&path_buf)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

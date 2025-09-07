@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 
 export const useLogManager = () => {
-  const [logs, setLogs] = useState({});
+  const [logSourcesMap, setLogSourcesMap] = useState({});
   const [logEntries, setLogEntries] = useState([]);
   const [logFiles, setLogFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -25,19 +25,27 @@ const fetchLogs = useCallback(async () => {
     if (result.length > 0) {
     }
 
-    setLogs(result);
-
-    const files = result.map(([logSource, logEntries]) => ({
-      id: logSource.path,
-      name: logSource.path.split('/').pop(),
-      path: logSource.path,
-      size: Math.floor(logSource.size / 1024) > 0
-	? `${Math.floor(logSource.size / 1024)} KB`
-	: `${logSource.size} B`,
-      modified: new Date().toLocaleDateString(),
-      entryCount: logEntries.length,
-      logSourceKey: logSource
-    }));
+    const sourcesMap = {};
+    const files = result.map(([logSource, logEntries]) => {
+      sourcesMap[logSource.path] = {
+        logSource,
+        entries: logEntries
+      };
+      
+      return {
+        id: logSource.path,
+        name: logSource.path.split('/').pop(),
+        path: logSource.path,
+        size: Math.floor(logSource.size / 1024) > 0
+          ? `${Math.floor(logSource.size / 1024)} KB`
+          : `${logSource.size} B`,
+        modified: new Date().toLocaleDateString(),
+        entryCount: logEntries.length,
+        logSourceKey: logSource
+      };
+    });
+    
+    setLogSourcesMap(sourcesMap);
     setLogFiles(files);
 
     if (!selectedFile && files.length > 0) {
@@ -49,21 +57,18 @@ const fetchLogs = useCallback(async () => {
   } finally {
     setLoading(false);
   }
-}, [selectedFile]);  // Update log entries when selected file changes
+}, []);  // Update log entries when selected file changes
 
 
 useEffect(() => {
   if (selectedFile) {
-    // logs is an array of [logSource, logEntries]
-    const tuple = logs.find(([logSource]) => logSource.path === selectedFile.path);
-    if (tuple) {
-      const [, logEntriesRaw] = tuple;
-      const entries = logEntriesRaw.map((entry, index) => ({
+    const sourceData = logSourcesMap[selectedFile.path];
+    if (sourceData) {
+      const entries = sourceData.entries.map((entry, index) => ({
         id: index + 1,
         timestamp: entry.timestamp || new Date().toISOString(),
         level: entry.level || 'INFO',
         message: entry.message || 'No message',
-        source: selectedFile.name
       }));
       setLogEntries(entries);
     } else {
@@ -72,15 +77,94 @@ useEffect(() => {
   } else {
     setLogEntries([]);
   }
-}, [selectedFile, logs]);
+}, [selectedFile, logSourcesMap]);
 
 
-  // Select a log file
-  const selectLogFile = useCallback((file) => {
+  const selectLogFile = useCallback(async (file) => {
     setSelectedFile(file);
+    
+    if (file && file.path) {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const [updatedLogSource, updatedLogEntries] = await invoke('refresh_source', { path: file.path });
+        
+        setLogSourcesMap(prevMap => ({
+          ...prevMap,
+          [file.path]: {
+            logSource: updatedLogSource,
+            entries: updatedLogEntries
+          }
+        }));
+        
+        // Update the file metadata for this specific file
+        setLogFiles(prevFiles => 
+          prevFiles.map(f => 
+            f.path === file.path 
+              ? { 
+                  ...f, 
+                  entryCount: updatedLogEntries.length, 
+                  modified: new Date().toLocaleDateString(),
+                  size: Math.floor(updatedLogSource.size / 1024) > 0
+                    ? `${Math.floor(updatedLogSource.size / 1024)} KB`
+                    : `${updatedLogSource.size} B`
+                }
+              : f
+          )
+        );
+      } catch (err) {
+        console.error('Failed to refresh selected file:', err);
+        setError(err.message || 'Failed to refresh selected file');
+      } finally {
+        setLoading(false);
+      }
+    }
   }, []);
 
-  // Refresh logs
+    // Refresh a specific log source
+  const refreshLogSource = useCallback(async (filePath) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Use the refresh_source command from Rust which now returns the updated data
+      const [updatedLogSource, updatedLogEntries] = await invoke('refresh_source', { path: filePath });
+      
+      // Update only the corresponding value in the dictionary, not the whole dictionary
+      setLogSourcesMap(prevMap => ({
+        ...prevMap,
+        [filePath]: {
+          logSource: updatedLogSource,
+          entries: updatedLogEntries
+        }
+      }));
+      
+      // Update the file metadata for this specific file
+      setLogFiles(prevFiles => 
+        prevFiles.map(f => 
+          f.path === filePath 
+            ? { 
+                ...f, 
+                entryCount: updatedLogEntries.length, 
+                modified: new Date().toLocaleDateString(),
+                size: Math.floor(updatedLogSource.size / 1024) > 0
+                  ? `${Math.floor(updatedLogSource.size / 1024)} KB`
+                  : `${updatedLogSource.size} B`
+              }
+            : f
+        )
+      );
+      
+    } catch (err) {
+      console.error('Failed to refresh log source:', err);
+      setError(err.message || 'Failed to refresh log source');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Refresh all logs
   const refreshLogs = useCallback(() => {
     fetchLogs();
   }, [fetchLogs]);
@@ -92,7 +176,7 @@ useEffect(() => {
   }, [fetchLogs]);
 
   return {
-    logs,
+    logSourcesMap,
     logEntries,
     logFiles,
     selectedFile,
@@ -100,6 +184,7 @@ useEffect(() => {
     error,
     selectLogFile,
     refreshLogs,
+    refreshLogSource,
   };
 };
 
